@@ -14,9 +14,28 @@ export default [
 
   ...tseslint.config(
     eslint.configs.recommended,
-    tseslint.configs.recommended,
+    tseslint.configs.recommendedTypeChecked,
+    {
+      languageOptions: {
+        parserOptions: {
+          projectService: true,
+          tsconfigRootDir: import.meta.dirname,
+        },
+      },
+    },
   ),
+
   // reactHooks.configs['recommended-latest'],
+  {
+    plugins: {
+      'react-hooks': reactHooks,
+    },
+    rules: {
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn'
+    }
+
+  },
 
   {
     languageOptions: {
@@ -28,7 +47,6 @@ export default [
       parser: tsParser,
       parserOptions: {
         project: true,
-        // tsconfigRootDir: __dirname,
         tsconfigRootDir: import.meta.dirname,
       },
     },
