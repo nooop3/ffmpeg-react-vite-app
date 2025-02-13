@@ -8,18 +8,20 @@ import tsParser from "@typescript-eslint/parser";
 import reactRefresh from "eslint-plugin-react-refresh";
 
 export default [
-  {
-    files: ["**/*.ts", "**/*.tsx"],
-    ignores: ["**/dist", "**/eslint.config.js"],
-  },
-
   ...tseslint.config(
+    {
+      files: ["**/*.ts", "**/*.tsx"],
+      ignores: ["**/dist", "eslint.config.js"],
+    },
     eslint.configs.recommended,
     tseslint.configs.recommendedTypeChecked,
     {
       languageOptions: {
         parserOptions: {
-          projectService: true,
+          projectService: {
+            allowDefaultProject: ['eslint.config.js']
+          },
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           tsconfigRootDir: import.meta.dirname,
         },
       },
@@ -51,6 +53,7 @@ export default [
       parser: tsParser,
       parserOptions: {
         project: true,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         tsconfigRootDir: import.meta.dirname,
       },
     },

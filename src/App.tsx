@@ -49,11 +49,19 @@ function App() {
     <>
       <video ref={videoRef} controls></video>
       <br />
-      <button onClick={transcode}>Transcode avi to mp4</button>
+      <button onClick={
+        () => {
+          void transcode();
+        }
+      }>Transcode avi to mp4</button>
       <p ref={messageRef}></p>
     </>
   ) : (
-    <button onClick={load}>Load ffmpeg-core</button>
+    <button onClick={
+      () => {
+        void load();
+      }
+    }>Load ffmpeg-core</button>
   );
 }
 
