@@ -11,8 +11,9 @@ function App() {
   const load = async () => {
     const baseURL = "https://unpkg.com/@ffmpeg/core-mt@0.12.9/dist/esm";
     const ffmpeg = ffmpegRef.current;
-    ffmpeg.on("log", ({ message }) => {
-      if (messageRef.current) messageRef.current.innerHTML = message;
+    ffmpeg.on("progress", ({ progress, time }) => {
+      if (messageRef.current)
+        messageRef.current.innerHTML = `${progress * 100} % (transcoded time: ${time / 1000000} s)`;
     });
     // toBlobURL is used to bypass CORS issue, urls with the same
     // domain can be used directly.
