@@ -8,11 +8,13 @@ import tsParser from "@typescript-eslint/parser";
 import reactRefresh from "eslint-plugin-react-refresh";
 
 export default [
+  {
+    ignores: ["dist", "eslint.config.js"],
+  },
+  {
+    files: ["**/*.ts", "**/*.tsx"],
+  },
   ...tseslint.config(
-    {
-      files: ["**/*.ts", "**/*.tsx"],
-      ignores: ["**/dist", "eslint.config.js"],
-    },
     eslint.configs.recommended,
     tseslint.configs.recommendedTypeChecked,
     {
