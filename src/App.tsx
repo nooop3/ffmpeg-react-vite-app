@@ -4,9 +4,11 @@ import { toBlobURL, fetchFile } from "@ffmpeg/util";
 
 function App() {
   const [loaded, setLoaded] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const ffmpegRef = useRef(new FFmpeg());
-  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const messageRef = useRef<HTMLParagraphElement | null>(null);
+  const [transcodeComplete, setTranscodeComplete] = useState(false);
 
   const load = async () => {
     const baseURL = "https://unpkg.com/@ffmpeg/core-mt@0.12.9/dist/esm";
@@ -31,31 +33,75 @@ function App() {
     setLoaded(true);
   };
 
-  const transcode = async () => {
-    const videoURL =
-      "https://raw.githubusercontent.com/ffmpegwasm/testdata/master/video-15s.avi";
-    const ffmpeg = ffmpegRef.current;
-    await ffmpeg.writeFile("input.avi", await fetchFile(videoURL));
-    await ffmpeg.exec(["-i", "input.avi", "output.mp4"]);
-    const fileData = await ffmpeg.readFile("output.mp4");
-    const data = new Uint8Array(fileData as ArrayBuffer);
-    if (videoRef.current) {
-      videoRef.current.src = URL.createObjectURL(
-        new Blob([data.buffer], { type: "video/mp4" })
-      );
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && file.type === 'audio/x-m4a') {
+      setSelectedFile(file);
+      setTranscodeComplete(false)
+    } else {
+      alert('Please select a valid .m4a file');
     }
   };
 
+  const transcode = async () => {
+    if (!selectedFile) return;
+
+    setTranscodeComplete(false); // Reset when starting new transcode
+    const ffmpeg = ffmpegRef.current;
+    const outputFileName = selectedFile.name.replace('.m4a', '.mp3');
+
+    await ffmpeg.writeFile("input.m4a", await fetchFile(selectedFile));
+    await ffmpeg.exec(["-i", "input.m4a", outputFileName]);
+    const fileData = await ffmpeg.readFile(outputFileName);
+    const data = new Uint8Array(fileData as ArrayBuffer);
+
+    // Create the blob URL before setting transcodeComplete
+    const audioBlob = new Blob([data.buffer], { type: "audio/mp3" });
+    const audioUrl = URL.createObjectURL(audioBlob);
+
+    // Set transcodeComplete first, then update the audio src in the next tick
+    setTranscodeComplete(true);
+
+    // Use setTimeout to ensure the audio element is mounted
+    setTimeout(() => {
+      if (audioRef.current) {
+        audioRef.current.src = audioUrl;
+      }
+    }, 0);
+  };
+
+
   return loaded ? (
     <>
-      <video ref={videoRef} controls></video>
-      <br />
-      <button onClick={
-        () => {
-          void transcode();
-        }
-      }>Transcode avi to mp4</button>
-      <p ref={messageRef}></p>
+      <div>
+        <input
+          type="file"
+          accept=".m4a"
+          onChange={handleFileSelect}
+        />
+        {selectedFile && <p>Selected file: {selectedFile.name}</p>}
+      </div>
+      {selectedFile &&
+        <>
+          {!transcodeComplete && <button onClick={() => void transcode()}>Transcode m4a to mp3</button>}
+          <p ref={messageRef}></p>
+          {transcodeComplete && (
+            <>
+              <audio ref={audioRef} controls></audio>
+              <br />
+              <button onClick={() => {
+                if (audioRef.current?.src) {
+                  const a = document.createElement('a');
+                  a.href = audioRef.current.src;
+                  a.download = selectedFile.name.replace('.m4a', '.mp3');
+                  a.click();
+                }
+              }}>Download MP3</button>
+            </>
+          )}
+          <br />
+        </>
+      }
     </>
   ) : (
     <button onClick={
